@@ -22,6 +22,7 @@ options:
   -i IDENTITY, --identity IDENTITY
                         using public private key instead of password
   -s SALT, --salt SALT  some string as salt used for better protection against dictionary attacks
+  -n, --no-line-break   outputs no line break at the end
 ```
 
 
