@@ -34,6 +34,9 @@ def init():
     parser.add_argument(
         "-s", "--salt", default='', help="some string as salt used for better protection against dictionary attacks")
 
+    parser.add_argument(
+        "-n", "--no-line-break", action='store_true', help="outputs no line break at the end")
+
     args = parser.parse_args()
 
     if args.encrypt:
@@ -144,7 +147,7 @@ def encrypt():
     else:
         encrypted_text = encrypt_password()
 
-    print(encrypted_text)
+    print(encrypted_text, end="")
 
 def decrypt():
     ''' starts decryption using a private key or password '''
@@ -153,7 +156,12 @@ def decrypt():
         decrypted_text = decrypt_private_key()
     else:
         decrypted_text = decrypt_password()
-    print(decrypted_text)
+    
+    if args.no_line_break:
+        print(decrypted_text, end="")
+    else:
+        print(decrypted_text)
+
 
 def usage():
     sys.exit('usage: secured [-h] [-e] [-d] [-i IDENTITY]')
