@@ -5,6 +5,8 @@ import sys
 import getpass
 import base64
 import os
+import subprocess
+
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -35,7 +37,10 @@ def init():
         "-s", "--salt", default='', help="some string as salt used for better protection against dictionary attacks")
 
     parser.add_argument(
-        "-n", "--no-line-break", action='store_true', help="outputs no line break at the end")
+	"-g", "--gui", action='store_true', help="use stdin from password dialog")
+
+    parser.add_argument(
+	"-t", "--title", default='', help="some string as title")
 
     args = parser.parse_args()
 
@@ -45,6 +50,22 @@ def init():
         decrypt()
     else:
         usage()
+
+
+
+def read_password():
+    dialog_cmd = os.getenv('PIPHER_PASSWORD_DIALOG')
+
+    if not args.gui or not dialog_cmd:
+      return getpass.getpass('enter password:\n').encode()
+
+    try:
+        # Verwenden Sie kdialog, um das Passwort einzugeben
+        password = subprocess.check_output(dialog_cmd % args.title, shell=True, text=True).strip()
+        return password.encode()
+    except subprocess.CalledProcessError:
+        print("Fehler beim Aufrufen von kdialog.")
+        return getpass.getpass('enter password:\n').encode()
 
 def read_public_key():
     ''' reads public key from identity file  '''
@@ -70,7 +91,7 @@ def read_private_key(private_key = None, password = None):
 def read_key_pass():
     ''' prompts for a password and derives it to an encryption key  '''
 
-    password = getpass.getpass('enter password:\n').encode()
+    password = read_password()
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -147,7 +168,7 @@ def encrypt():
     else:
         encrypted_text = encrypt_password()
 
-    print(encrypted_text, end="")
+    print(encrypted_text)
 
 def decrypt():
     ''' starts decryption using a private key or password '''
@@ -156,12 +177,7 @@ def decrypt():
         decrypted_text = decrypt_private_key()
     else:
         decrypted_text = decrypt_password()
-    
-    if args.no_line_break:
-        print(decrypted_text, end="")
-    else:
-        print(decrypted_text)
-
+    print(decrypted_text)
 
 def usage():
     sys.exit('usage: secured [-h] [-e] [-d] [-i IDENTITY]')
