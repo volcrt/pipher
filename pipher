@@ -61,7 +61,10 @@ def read_password():
 
     try:
         # Verwenden Sie kdialog, um das Passwort einzugeben
-        password = subprocess.check_output(dialog_cmd % args.title, shell=True, text=True).strip()
+        if not args.title:
+          password = subprocess.check_output(dialog_cmd % "", shell=True, text=True).strip()
+        else:
+          password = subprocess.check_output(dialog_cmd % "(%s %s)" % ("for", args.title), shell=True, text=True).strip()
         return password.encode()
     except subprocess.CalledProcessError:
         print("Fehler beim Aufrufen von kdialog.")
